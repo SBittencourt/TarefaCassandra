@@ -63,11 +63,10 @@ def main_menu():
                 cpfUsuario = input("Atualizar usuário, digite o CPF do usuário: ")
                 crud_usuario.update_usuario(session, cpfUsuario)
 
-            elif sub == '4':
-                print("Deletar usuário")
-                nomeUsuario = input("Nome a ser deletado: ")
-                sobrenome = input("Sobrenome a ser deletado: ")
-                crud_usuario.delete_usuario(session, nomeUsuario, sobrenome)
+            elif sub == '4': 
+                print("Deletar Usuário")
+                cpf_usuario = input("CPF do usuário a ser deletado: ")
+                crud_usuario.delete_usuario(session, cpf_usuario)
 
         elif key == '2':  # CRUD Vendedor
             print("Menu do Vendedor")

@@ -2,13 +2,13 @@ from cassandra.cluster import Cluster, ConsistencyLevel
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.query import SimpleStatement
 
-# Função para deletar usuário
-def delete_usuario(session, cpf):
-    query = SimpleStatement("""
-    DELETE FROM usuario WHERE cpf=%s
-    """)
-    session.execute(query, (cpf,))
-    print(f"Deletado o usuário com CPF {cpf}")
+from cassandra.query import SimpleStatement
+from cassandra import ConsistencyLevel
+
+def delete_usuario(session, cpf_usuario):
+    query = SimpleStatement("DELETE FROM usuario WHERE cpf=%s", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
+    session.execute(query, (cpf_usuario,))
+    print(f"Usuário com CPF '{cpf_usuario}' deletado com sucesso.")
 
 def create_tables(session):
 
