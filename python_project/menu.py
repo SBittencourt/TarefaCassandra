@@ -2,14 +2,12 @@ from cassandra.cluster import Cluster
 from cassandra.auth import PlainTextAuthProvider
 import json
 
-# Importando os módulos de CRUD
 import crud_usuario
 import crud_vendedor
 import crud_produto
 import crud_compras
 import crud_favoritos
 
-# Função para criar sessão Cassandra
 def create_session():
     cloud_config = {
         'secure_connect_bundle': 'secure-connect-mercadolivre.zip'
@@ -29,9 +27,8 @@ def create_session():
     
     return session
 
-# Função principal do menu
 def main_menu():
-    session = create_session()  # Conectando ao Cassandra
+    session = create_session() 
     key = '0'
     sub = '0'
 
@@ -43,7 +40,7 @@ def main_menu():
         print("5 - Favoritos")
         key = input("Digite a opção desejada? (S para sair) ")
 
-        if key == '1':  # CRUD Usuário
+        if key == '1':  
             print("Menu do Usuário")
             print("1 - Criar Usuário")
             print("2 - Visualizar Usuário")
@@ -68,7 +65,7 @@ def main_menu():
                 cpf_usuario = input("CPF do usuário a ser deletado: ")
                 crud_usuario.delete_usuario(session, cpf_usuario)
 
-        elif key == '2':  # CRUD Vendedor
+        elif key == '2':  
             print("Menu do Vendedor")
             print("1 - Criar Vendedor")
             print("2 - Ler Vendedor")
@@ -81,20 +78,20 @@ def main_menu():
                 crud_vendedor.create_vendedor(session)
 
             elif sub == '2':
-                nomeVendedor = input("Ler vendedor, deseja algum nome específico? ")
-                crud_vendedor.read_vendedor(session, nomeVendedor)
+                cpfVendedor = input("Ler vendedor, digite o CPF do vendedor: ")
+                crud_vendedor.read_vendedor(session, cpfVendedor)
 
             elif sub == '3':
-                nomeVendedor = input("Atualizar vendedor, digite o nome do vendedor: ")
-                crud_vendedor.update_vendedor(session, nomeVendedor)
+                cpfVendedor = input("Atualizar vendedor, digite o CPF do vendedor: ")
+                update_fields = {}
+                crud_vendedor.update_vendedor(session, cpfVendedor, update_fields)
 
             elif sub == '4':
                 print("Deletar Vendedor")
-                nomeVendedor = input("Nome do vendedor a ser deletado: ")
                 cpfVendedor = input("CPF do vendedor a ser deletado: ")
-                crud_vendedor.delete_vendedor(session, nomeVendedor, cpfVendedor)
+                crud_vendedor.delete_vendedor(session, cpfVendedor)
 
-        elif key == '3':  # CRUD Produto
+        elif key == '3':  
             print("Menu do Produto")
             print("1 - Criar Produto")
             print("2 - Ver Produto")
@@ -160,4 +157,3 @@ def main_menu():
 
 if __name__ == "__main__":
     main_menu()
-
