@@ -78,8 +78,8 @@ def main_menu():
                 crud_vendedor.create_vendedor(session)
 
             elif sub == '2':
-                cpfVendedor = input("Ler vendedor, digite o CPF do vendedor: ")
-                crud_vendedor.read_vendedor(session, cpfVendedor)
+                nomeVendedor = input("Ler vendedor, deseja algum nome específico? ")
+                crud_vendedor.read_vendedor(session, nomeVendedor)
 
             elif sub == '3':
                 cpfVendedor = input("Atualizar vendedor, digite o CPF do vendedor: ")
@@ -94,66 +94,68 @@ def main_menu():
         elif key == '3':  
             print("Menu do Produto")
             print("1 - Criar Produto")
-            print("2 - Ver Produto")
+            print("2 - Ler Produto")
             print("3 - Atualizar Produto")
             print("4 - Deletar Produto")
             sub = input("Digite a opção desejada? (V para voltar) ")
 
-            if sub == '1':
-                print("Criar Produto")
+                    
+            if sub == "1":
                 crud_produto.create_produto(session)
 
-            elif sub == '2':
-                nomeProduto = input("Ver produtos, deseja algum nome específico? Pressione Enter para ver todos")
-                crud_produto.read_produto(session, nomeProduto)
+            elif sub == "2":
+                crud_produto.read_produto(session)
 
-            elif sub == '3':
-                nomeProduto = input("Atualizar produtos, deseja algum nome específico? ")
+            elif sub == "3":
+                nomeProduto = input("Digite o nome do produto a ser atualizado: ")
                 crud_produto.update_produto(session, nomeProduto)
 
-            elif sub == '4':
-                print("Deletar Produto")
-                nomeProduto = input("Nome do produto a ser deletado: ")
+            elif sub == "4":
+                nomeProduto = input("Digite o nome do produto a ser deletado: ")
                 crud_produto.delete_produto(session, nomeProduto)
+                
+            elif sub == "5":
+                break
+            else:
+                print("Opção inválida. Tente novamente.")
 
-        elif key == '4':  # Compras
+        elif key == '4':  
             print("Menu de Compras")
-            print("1 - Realizar Compra")
-            print("2 - Ver Compras Realizadas")
+            print("1 - Realizar Compras")
+            print("2 - Listar Compras")
+            print("3 - Detalhar Compras")
             sub = input("Digite a opção desejada? (V para voltar) ")
 
             if sub == '1':
-                cpf_usuario = input("Digite o CPF do usuário: ")
-                carrinho_usuario = crud_compras.realizar_compra(session, cpf_usuario)
+                print("Realizar Compras")
+                crud_compras.create_compras(session)
 
             elif sub == '2':
-                cpf_usuario = input("Digite o CPF do usuário: ")
-                crud_compras.ver_compras_realizadas(session, cpf_usuario)
-
-        elif key == '5':  # Favoritos
-            print("Menu de Favoritos")
-            print("1 - Adicionar Favorito")
-            print("2 - Visualizar Favoritos")
-            print("3 - Remover Favorito")
-            sub = input("Digite a opção desejada? (V para voltar) ")
-
-            if sub == '1':
-                crud_favoritos.adicionar_favorito(session)
-
-            elif sub == '2':
-                cpf_usuario = input("Digite o CPF do usuário: ")
-                crud_favoritos.visualizar_favoritos(session, cpf_usuario)
+                cpfUsuario = input("Listar compras, digite o CPF do usuário: ")
+                crud_compras.read_compras(session, cpfUsuario)
 
             elif sub == '3':
-                cpf_usuario = input("Digite o CPF do usuário: ")
-                id_produto = input("Digite o ID do produto a ser removido dos favoritos: ")
-                crud_favoritos.remover_favorito(session, cpf_usuario, id_produto)
+                compra_id = input("Detalhar compra, digite o ID da compra: ")
+                crud_compras.detalhar_compras(session, compra_id)
 
-        else:
-            print("Opção inválida. Por favor, digite uma opção válida.")
+        elif key == '5':  
+            print("Menu de Favoritos")
+            print("1 - Adicionar Favoritos")
+            print("2 - Listar Favoritos")
+            print("3 - Remover Favoritos")
+            sub = input("Digite a opção desejada? (V para voltar) ")
 
-    session.shutdown()  # Encerrando a sessão do Cassandra ao sair do menu
-    print("Tchau, tchau! Volte sempre!")
+            if sub == '1':
+                print("Adicionar Favoritos")
+                crud_favoritos.add_favorito(session)
 
+            elif sub == '2':
+                cpfUsuario = input("Listar favoritos, digite o CPF do usuário: ")
+                crud_favoritos.list_favoritos(session, cpfUsuario)
+
+            elif sub == '3':
+                favorito_id = input("Remover favorito, digite o ID do favorito: ")
+                crud_favoritos.remove_favorito(session, favorito_id)
+        
 if __name__ == "__main__":
     main_menu()

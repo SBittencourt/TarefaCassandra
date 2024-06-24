@@ -2,8 +2,6 @@ from cassandra.cluster import Cluster, ConsistencyLevel
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.query import SimpleStatement
 
-from cassandra.query import SimpleStatement
-from cassandra import ConsistencyLevel
 
 def delete_usuario(session, cpf_usuario):
     query = SimpleStatement("DELETE FROM usuario WHERE cpf=%s", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
@@ -11,7 +9,7 @@ def delete_usuario(session, cpf_usuario):
     print(f"Usuário com CPF '{cpf_usuario}' deletado com sucesso.")
 
 def create_tables(session):
-
+    
     session.execute("""
     CREATE TABLE IF NOT EXISTS usuario (
         nome text,
@@ -25,21 +23,22 @@ def create_tables(session):
     """)
 
     session.execute("""
-    CREATE TABLE IF NOT EXISTS produto (
-        id UUID PRIMARY KEY,
-        nome text,
-        preco float,
-        vendedor text
-    )
-    """)
-
-    session.execute("""
     CREATE TABLE IF NOT EXISTS vendedor (
         cpf text PRIMARY KEY,
         nome text,
         telefone text,
         email text,
         enderecos list<frozen<map<text, text>>>
+    )
+    """)
+
+    session.execute("""
+    CREATE TABLE IF NOT EXISTS produto (
+        id UUID PRIMARY KEY,
+        nome text,
+        preco float,
+        marca text,
+        vendedor text
     )
     """)
 
@@ -59,6 +58,8 @@ def create_tables(session):
         endereco_entrega text
     )
     """)
+
+
 
 
 

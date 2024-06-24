@@ -1,3 +1,4 @@
+import uuid
 import connect_database
 
 def create_produto(session):
@@ -18,30 +19,27 @@ def create_produto(session):
         print("Vendedor com o CPF", cpfVendedor, "não encontrado. Produto não foi criado.")
         return
 
-    end = {
-        "rua": "Main St", 
-        "num": "123", 
-        "bairro": "Downtown", 
-        "cidade": "Metropolis", 
-        "estado": "MT", 
-        "cep": "12345"
-    }
+    produto_id = uuid.uuid4()
+
     session.execute("""
-        INSERT INTO produto (id, nome, preco, marca, vendedor, end) 
-        VALUES (uuid(), %s, %s, %s, %s, %s)
-    """, (nomeProduto, preco, marca, cpfVendedor, [end]))
-    print("Produto inserido com sucesso.")
+        INSERT INTO produto (id, nome, preco, marca, vendedor) 
+        VALUES (%s, %s, %s, %s, %s)
+    """, (produto_id, nomeProduto, preco, marca, cpfVendedor))
+    print("Produto inserido com sucesso. ID do Produto:", produto_id)
 
 def read_produto(session, nomeProduto=None):
-    print("Produtos existentes: ")
     if not nomeProduto:
         produtos = session.execute("SELECT * FROM produto")
         for produto in produtos:
-            print(produto.nome)
+            vendedor = session.execute("SELECT nome FROM vendedor WHERE cpf=%s", (produto.vendedor,)).one()
+            vendedor_nome = vendedor.nome if vendedor else "Vendedor não encontrado"
+            print(f"ID: {produto.id}, Nome: {produto.nome}, Preço: {produto.preco}, Marca: {produto.marca}, Vendedor: {vendedor_nome}")
     else:
         produto = session.execute("SELECT * FROM produto WHERE nome=%s ALLOW FILTERING", (nomeProduto,)).one()
         if produto:
-            print(f"Nome: {produto.nome}, Preço: {produto.preco}, Marca: {produto.marca}")
+            vendedor = session.execute("SELECT nome FROM vendedor WHERE cpf=%s", (produto.vendedor,)).one()
+            vendedor_nome = vendedor.nome if vendedor else "Vendedor não encontrado"
+            print(f"ID: {produto.id}, Nome: {produto.nome}, Preço: {produto.preco}, Marca: {produto.marca}, Vendedor: {vendedor_nome}")
         else:
             print(f"Produto com nome '{nomeProduto}' não encontrado.")
 
@@ -49,11 +47,11 @@ def update_produto(session, nomeProduto):
     produto = session.execute("SELECT * FROM produto WHERE nome=%s ALLOW FILTERING", (nomeProduto,)).one()
     if produto:
         print("Dados do produto: ")
-        print(f"Nome: {produto.nome}, Preço: {produto.preco}, Marca: {produto.marca}")
+        print(f"ID: {produto.id}, Nome: {produto.nome}, Preço: {produto.preco}, Marca: {produto.marca}")
         
-        novo_nome = input("Mudar nome do produto:")
-        novo_preco = float(input("Mudar preço:"))
-        nova_marca = input("Mudar marca:")
+        novo_nome = input("Mudar nome do produto: ")
+        novo_preco = float(input("Mudar preço: "))
+        nova_marca = input("Mudar marca: ")
         
         print("Vendedores existentes:")
         vendedores = session.execute("SELECT * FROM vendedor")
@@ -68,8 +66,8 @@ def update_produto(session, nomeProduto):
             return
 
         session.execute("""
-            UPDATE produto SET nome=%s, preco=%s, marca=%s, vendedor=%s WHERE nome=%s
-        """, (novo_nome, novo_preco, nova_marca, cpfVendedor, nomeProduto))
+            UPDATE produto SET nome=%s, preco=%s, marca=%s, vendedor=%s WHERE id=%s
+        """, (novo_nome, novo_preco, nova_marca, cpfVendedor, produto.id))
         print("Produto atualizado com sucesso!")
     else:
         print("Produto não encontrado.")
@@ -77,7 +75,7 @@ def update_produto(session, nomeProduto):
 def delete_produto(session, nomeProduto):
     produto = session.execute("SELECT * FROM produto WHERE nome=%s ALLOW FILTERING", (nomeProduto,)).one()
     if produto:
-        session.execute("DELETE FROM produto WHERE nome=%s", (nomeProduto,))
+        session.execute("DELETE FROM produto WHERE id=%s", (produto.id,))
         print(f"Produto '{nomeProduto}' deletado com sucesso.")
     else:
         print(f"Produto '{nomeProduto}' não encontrado.")
