@@ -120,23 +120,34 @@ def main_menu():
                 print("Opção inválida. Tente novamente.")
 
         elif key == '4':  
-            print("Menu de Compras")
+            print("\nMenu de Compras")
             print("1 - Realizar Compras")
             print("2 - Listar Compras")
-            print("3 - Detalhar Compras")
-            sub = input("Digite a opção desejada? (V para voltar) ")
+            print("3 - Detalhar Compra")
+            print("4 - Voltar ao Menu Principal")
+            sub = input("Digite a opção desejada: ")
 
             if sub == '1':
                 print("Realizar Compras")
-                crud_compras.create_compras(session)
+                cpf_usuario = input("Digite o CPF do usuário: ")
+                crud_compras.realizar_compra(session, cpf_usuario)
 
             elif sub == '2':
-                cpfUsuario = input("Listar compras, digite o CPF do usuário: ")
-                crud_compras.read_compras(session, cpfUsuario)
+                print("Listar Compras")
+                cpf_usuario = input("Digite o CPF do usuário para listar suas compras: ")
+                crud_compras.ver_compras_realizadas(session, cpf_usuario)
 
             elif sub == '3':
-                compra_id = input("Detalhar compra, digite o ID da compra: ")
-                crud_compras.detalhar_compras(session, compra_id)
+                print("Detalhar Compra")
+                compra_id = input("Digite o ID da compra para detalhar: ")
+                crud_compras.detalhar_compra(session, compra_id)
+
+            elif sub.upper() == 'V':
+                print("Voltando ao Menu Principal...")
+                break
+
+            else:
+                print("Opção inválida. Digite uma opção válida.")
 
         elif key == '5':  
             print("Menu de Favoritos")

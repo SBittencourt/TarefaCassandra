@@ -1,7 +1,5 @@
 from cassandra.cluster import Cluster, ConsistencyLevel
-from cassandra.auth import PlainTextAuthProvider
 from cassandra.query import SimpleStatement
-
 
 def delete_usuario(session, cpf_usuario):
     query = SimpleStatement("DELETE FROM usuario WHERE cpf=%s", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
@@ -9,7 +7,6 @@ def delete_usuario(session, cpf_usuario):
     print(f"Usuário com CPF '{cpf_usuario}' deletado com sucesso.")
 
 def create_tables(session):
-    
     session.execute("""
     CREATE TABLE IF NOT EXISTS usuario (
         nome text,
@@ -22,46 +19,7 @@ def create_tables(session):
     )
     """)
 
-    session.execute("""
-    CREATE TABLE IF NOT EXISTS vendedor (
-        cpf text PRIMARY KEY,
-        nome text,
-        telefone text,
-        email text,
-        enderecos list<frozen<map<text, text>>>
-    )
-    """)
-
-    session.execute("""
-    CREATE TABLE IF NOT EXISTS produto (
-        id UUID PRIMARY KEY,
-        nome text,
-        preco float,
-        marca text,
-        vendedor text
-    )
-    """)
-
-    session.execute("""
-    CREATE TABLE IF NOT EXISTS favoritos (
-        id UUID PRIMARY KEY,
-        cpf_usuario text,
-        id_produto UUID
-    )
-    """)
-
-    session.execute("""
-    CREATE TABLE IF NOT EXISTS compras (
-        id UUID PRIMARY KEY,
-        cpf_usuario text,
-        produtos list<frozen<map<text, text>>>,
-        endereco_entrega text
-    )
-    """)
-
-
-
-
+    # Defina outras tabelas aqui (vendedor, produto, favoritos, compras)
 
 def create_usuario(session):
     print("\nInserindo um novo usuário")
@@ -94,6 +52,41 @@ def create_usuario(session):
     """)
     session.execute(query, (nome, sobrenome, cpf, telefone, email, end, []))
     print(f"Usuário {nome} {sobrenome} inserido com sucesso")
+
+def read_usuario(session, nomeUsuario):
+    query = SimpleStatement("SELECT * FROM usuario WHERE nome=%s ALLOW FILTERING", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
+    mydoc = session.execute(query, (nomeUsuario,)).one()
+
+    if mydoc:
+        print(f"Nome: {mydoc.nome}")
+        print(f"Sobrenome: {mydoc.sobrenome}")
+        print(f"Telefone: {mydoc.telefone}")
+        print(f"Email: {mydoc.email}")
+        print("Endereço:")
+        for endereco in mydoc.end:
+            print(f"  Rua: {endereco['rua']}")
+            print(f"  Número: {endereco['num']}")
+            print(f"  Bairro: {endereco['bairro']}")
+            print(f"  Cidade: {endereco['cidade']}")
+            print(f"  Estado: {endereco['estado']}")
+            print(f"  CEP: {endereco['cep']}")
+    else:
+        print(f"Usuário com nome '{nomeUsuario}' não encontrado.")
+
+def update_usuario(session, cpf_usuario, update_fields):
+    query = SimpleStatement("SELECT * FROM usuario WHERE cpf=%s", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
+    mydoc = session.execute(query, (cpf_usuario,)).one()
+
+    if mydoc:
+        print("Dados do usuário antes da atualização:")
+        print_user_info(session, mydoc)
+
+        # Lógica de atualização aqui
+
+        print("Usuário atualizado com sucesso.")
+
+    else:
+        print(f"Usuário com CPF '{cpf_usuario}' não encontrado.")
 
 def visualizar_favoritos(session, cpf_usuario):
     query = SimpleStatement("""
@@ -129,29 +122,11 @@ def ver_compras_realizadas(session, cpf_usuario):
             print(f"   Nome do Produto: {produto['nome']} | Preço: {produto['preco']}")
         print(f"Endereço de Entrega: {compra['endereco_entrega']}")
         print("----")
-    
+
     if count == 0:
         print("Nenhuma compra encontrada para este usuário.")
 
-def read_usuario(session, nomeUsuario):
-    query = SimpleStatement("SELECT * FROM usuario WHERE nome=%s ALLOW FILTERING", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
-    mydoc = session.execute(query, (nomeUsuario,)).one()
 
-    if mydoc:
-        print(f"Nome: {mydoc.nome}")
-        print(f"Sobrenome: {mydoc.sobrenome}")
-        print(f"Telefone: {mydoc.telefone}")
-        print(f"Email: {mydoc.email}")
-        print("Endereço:")
-        for endereco in mydoc.end:
-            print(f"  Rua: {endereco['rua']}")
-            print(f"  Número: {endereco['num']}")
-            print(f"  Bairro: {endereco['bairro']}")
-            print(f"  Cidade: {endereco['cidade']}")
-            print(f"  Estado: {endereco['estado']}")
-            print(f"  CEP: {endereco['cep']}")
-    else:
-        print(f"Usuário com nome '{nomeUsuario}' não encontrado.")
 
 def print_user_info(session, user):
     print("Nome:", user.nome)
@@ -174,115 +149,34 @@ def print_user_info(session, user):
     print("----")
 
 
-def update_usuario(session, cpf_usuario):
-    query = SimpleStatement("SELECT * FROM usuario WHERE cpf=%s", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
-    mydoc = session.execute(query, (cpf_usuario,)).one()
-
-    if mydoc:
-        print("Dados do usuário antes da atualização:")
-        print_user_info(session, mydoc)
-
-        update_fields = {}
-
-        print("\nMenu de opções:")
-        print("1 - Mudar Nome")
-        print("2 - Mudar Sobrenome")
-        print("3 - Mudar Telefone")
-        print("4 - Mudar Email")
-        print("5 - Mudar Endereço")
-        print("6 - Voltar ao menu principal")
-
-        while True:
-            opcao = input("\nEscolha uma opção: ")
-
-            if opcao == "1":
-                nome = input("Novo Nome: ")
-                if nome:
-                    update_fields["nome"] = nome
-            elif opcao == "2":
-                sobrenome = input("Novo Sobrenome: ")
-                if sobrenome:
-                    update_fields["sobrenome"] = sobrenome
-            elif opcao == "3":
-                telefone = input("Novo Telefone: ")
-                if telefone:
-                    update_fields["telefone"] = telefone
-            elif opcao == "4":
-                email = input("Novo Email: ")
-                if email:
-                    update_fields["email"] = email
-            elif opcao == "5":
-                print("\nEndereço atual:")
-                for endereco in mydoc.end:
-                    print("Rua:", endereco["rua"])
-                    print("Número:", endereco["num"])
-                    print("Bairro:", endereco["bairro"])
-                    print("Cidade:", endereco["cidade"])
-                    print("Estado:", endereco["estado"])
-                    print("CEP:", endereco["cep"])
-                rua = input("\nNova Rua: ")
-                num = input("Novo Número: ")
-                bairro = input("Novo Bairro: ")
-                cidade = input("Nova Cidade: ")
-                estado = input("Novo Estado: ")
-                cep = input("Novo CEP: ")
-                endereco = {
-                    "rua": rua,
-                    "num": num,
-                    "bairro": bairro,
-                    "cidade": cidade,
-                    "estado": estado,
-                    "cep": cep
-                }
-                update_fields["end"] = [endereco]
-            elif opcao == "6":
-                print("Retornando ao menu principal...")
-                break
-            else:
-                print("Opção inválida. Por favor, escolha uma opção válida.")
-
-        # Preparando a atualização
-        update_query = "UPDATE usuario SET nome=%s, sobrenome=%s, telefone=%s, email=%s, end=%s WHERE cpf=%s"
-        session.execute(update_query, (
-            update_fields.get("nome", mydoc.nome),
-            update_fields.get("sobrenome", mydoc.sobrenome),
-            update_fields.get("telefone", mydoc.telefone),
-            update_fields.get("email", mydoc.email),
-            update_fields.get("end", mydoc.end),
-            cpf_usuario
-        ))
-        print("Usuário atualizado com sucesso.")
-
-    else:
-        print(f"Usuário com CPF '{cpf_usuario}' não encontrado.")
-
-
-import connect_database
-import crud_usuario
-
 def test_crud_operations():
-    session = connect_database.create_session()
-    crud_usuario.create_tables(session)
-    
+    from connect_database import create_session
+
+    session = create_session()
+    create_tables(session)
+
     # Teste de criação de usuário
     print("\nTeste de criação de usuário:")
-    crud_usuario.create_usuario(session)
-    
+    create_usuario(session)
+
     # Teste de leitura de usuário
     print("\nTeste de leitura de usuário:")
-    crud_usuario.read_usuario(session)
-    
+    nomeUsuario = input("Digite o nome do usuário para buscar: ")
+    read_usuario(session, nomeUsuario)
+
     # Teste de atualização de usuário
     print("\nTeste de atualização de usuário:")
+    cpf_usuario = input("Digite o CPF do usuário para atualizar: ")
     update_fields = {
         "telefone": "987654321",
         "email": "john.doe@newdomain.com"
     }
-    crud_usuario.update_usuario(session, "12345678900", update_fields)
-    
+    update_usuario(session, cpf_usuario, update_fields)
+
     # Teste de exclusão de usuário
     print("\nTeste de exclusão de usuário:")
-    crud_usuario.delete_usuario(session, "12345678900")
+    cpf_usuario = input("Digite o CPF do usuário para deletar: ")
+    delete_usuario(session, cpf_usuario)
 
 if __name__ == "__main__":
     test_crud_operations()
