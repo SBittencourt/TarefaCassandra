@@ -21,14 +21,14 @@ def realizar_compra(session, cpf_usuario):
                 print(f"{i} - ID: {produto.id} | Produto: {produto.nome} | Vendedor: Não disponível | Preço: {produto.preco}")
 
         # 2. Buscar endereços do usuário
-        query_enderecos = SimpleStatement("SELECT enderecos FROM usuario WHERE cpf=%s", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
+        query_enderecos = SimpleStatement("SELECT end FROM usuario WHERE cpf=%s", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
         usuario = session.execute(query_enderecos, (cpf_usuario,)).one()
 
-        if not usuario or 'enderecos' not in usuario:
+        if not usuario or 'end' not in usuario:
             print("Usuário não possui endereços cadastrados. Não é possível continuar com a compra.")
             return
 
-        enderecos = usuario['enderecos']
+        enderecos = usuario['end']
 
         # Se houver apenas um endereço, seleciona automaticamente
         if len(enderecos) == 1:
@@ -122,7 +122,7 @@ def ver_compras_realizadas(session, cpf_usuario):
             print("Produtos:")
             for produto in compra.produtos:
                 print(f"   Nome do Produto: {produto['nome']} | Preço: {produto['preco']}")
-            print(f"Endereço de Entrega: {compra.endereco_entrega}")
+            print(f"Endereço de Entrega: {compra.endereco_entrega}")  
             print(f"Valor Total: R${compra.valor_total:.2f}")
             print("----")
         
@@ -131,21 +131,3 @@ def ver_compras_realizadas(session, cpf_usuario):
     
     except InvalidRequest as e:
         print(f"Erro ao visualizar compras realizadas: {e}")
-
-def detalhar_compra(session, compra_id):
-    try:
-        query_compra = SimpleStatement("SELECT * FROM compras WHERE id=%s ALLOW FILTERING", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
-        compra = session.execute(query_compra, (compra_id,)).one()
-
-        if compra:
-            print(f"ID da Compra: {compra.id}")
-            print("Produtos:")
-            for produto in compra.produtos:
-                print(f"   Nome do Produto: {produto['nome']} | Preço: {produto['preco']}")
-            print(f"Endereço de Entrega: {compra.endereco_entrega}")
-            print(f"Valor Total: R${compra.valor_total:.2f}")
-        else:
-            print(f"Compra com ID '{compra_id}' não encontrada.")
-    
-    except InvalidRequest as e:
-        print(f"Erro ao detalhar compra: {e}")
