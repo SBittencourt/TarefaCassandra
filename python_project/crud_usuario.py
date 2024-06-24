@@ -11,6 +11,7 @@ def delete_usuario(session, cpf):
     print(f"Deletado o usuário com CPF {cpf}")
 
 def create_tables(session):
+
     session.execute("""
     CREATE TABLE IF NOT EXISTS usuario (
         nome text,
@@ -35,7 +36,10 @@ def create_tables(session):
     session.execute("""
     CREATE TABLE IF NOT EXISTS vendedor (
         cpf text PRIMARY KEY,
-        nome text
+        nome text,
+        telefone text,
+        email text,
+        enderecos list<frozen<map<text, text>>>
     )
     """)
 
@@ -55,6 +59,8 @@ def create_tables(session):
         endereco_entrega text
     )
     """)
+
+
 
 def create_usuario(session):
     print("\nInserindo um novo usuário")
