@@ -132,22 +132,25 @@ def ver_compras_realizadas(session, cpf_usuario):
     if count == 0:
         print("Nenhuma compra encontrada para este usuário.")
 
-def read_usuario(session, nomeUsuario=None):
-    print("Informações do usuário:")
-    if nomeUsuario is None:
-        query = SimpleStatement("""
-        SELECT * FROM usuario
-        """)
-        mydoc_usuario = session.execute(query)
-        for user in mydoc_usuario:
-            print_user_info(session, user)
+def read_usuario(session, nomeUsuario):
+    query = SimpleStatement("SELECT * FROM usuario WHERE nome=%s ALLOW FILTERING", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
+    mydoc = session.execute(query, (nomeUsuario,)).one()
+
+    if mydoc:
+        print(f"Nome: {mydoc.nome}")
+        print(f"Sobrenome: {mydoc.sobrenome}")
+        print(f"Telefone: {mydoc.telefone}")
+        print(f"Email: {mydoc.email}")
+        print("Endereço:")
+        for endereco in mydoc.end:
+            print(f"  Rua: {endereco['rua']}")
+            print(f"  Número: {endereco['num']}")
+            print(f"  Bairro: {endereco['bairro']}")
+            print(f"  Cidade: {endereco['cidade']}")
+            print(f"  Estado: {endereco['estado']}")
+            print(f"  CEP: {endereco['cep']}")
     else:
-        query = SimpleStatement("""
-        SELECT * FROM usuario WHERE nome=%s ALLOW FILTERING
-        """)
-        mydoc_usuario = session.execute(query, (nomeUsuario,))
-        for user in mydoc_usuario:
-            print_user_info(session, user)
+        print(f"Usuário com nome '{nomeUsuario}' não encontrado.")
 
 def print_user_info(session, user):
     print("Nome:", user.nome)
@@ -170,13 +173,15 @@ def print_user_info(session, user):
     print("----")
 
 
-def update_usuario(session, cpf_usuario, update_fields):
+def update_usuario(session, cpf_usuario):
     query = SimpleStatement("SELECT * FROM usuario WHERE cpf=%s", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
     mydoc = session.execute(query, (cpf_usuario,)).one()
 
     if mydoc:
         print("Dados do usuário antes da atualização:")
         print_user_info(session, mydoc)
+
+        update_fields = {}
 
         print("\nMenu de opções:")
         print("1 - Mudar Nome")

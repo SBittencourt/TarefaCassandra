@@ -35,9 +35,7 @@ def main_menu():
     key = '0'
     sub = '0'
 
-    while key.lower() != 's':
-        print("bem-vindo(a) ao mercado livre!")
-
+    while key.upper() != 'S':
         print("1 - CRUD Usuário")
         print("2 - CRUD Vendedor")
         print("3 - CRUD Produto")
@@ -62,8 +60,8 @@ def main_menu():
                 crud_usuario.read_usuario(session, nomeUsuario)
 
             elif sub == '3':
-                nomeUsuario = input("Atualizar usuário, deseja algum nome específico? ")
-                crud_usuario.update_usuario(session, nomeUsuario)
+                cpfUsuario = input("Atualizar usuário, digite o CPF do usuário: ")
+                crud_usuario.update_usuario(session, cpfUsuario)
 
             elif sub == '4':
                 print("Deletar usuário")
@@ -88,7 +86,7 @@ def main_menu():
                 crud_vendedor.read_vendedor(session, nomeVendedor)
 
             elif sub == '3':
-                nomeVendedor = input("Atualizar vendedor, deseja algum nome específico? ")
+                nomeVendedor = input("Atualizar vendedor, digite o nome do vendedor: ")
                 crud_vendedor.update_vendedor(session, nomeVendedor)
 
             elif sub == '4':
@@ -155,7 +153,7 @@ def main_menu():
                 id_produto = input("Digite o ID do produto a ser removido dos favoritos: ")
                 crud_favoritos.remover_favorito(session, cpf_usuario, id_produto)
 
-        elif key.lower() != 's':
+        else:
             print("Opção inválida. Por favor, digite uma opção válida.")
 
     session.shutdown()  # Encerrando a sessão do Cassandra ao sair do menu
@@ -163,3 +161,4 @@ def main_menu():
 
 if __name__ == "__main__":
     main_menu()
+
