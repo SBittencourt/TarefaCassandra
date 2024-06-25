@@ -19,6 +19,33 @@ def create_tables(session):
     )
     """)
 
+    session.execute("""
+    CREATE TABLE IF NOT EXISTS produto (
+        id UUID PRIMARY KEY,
+        nome text,
+        preco float,
+        marca text
+        vendedor text
+    )
+    """)
+
+
+    session.execute("""
+    CREATE TABLE IF NOT EXISTS favoritos (
+        id UUID PRIMARY KEY,
+        cpf_usuario text,
+        id_produto UUID
+    )
+    """)
+
+    session.execute("""
+    CREATE TABLE IF NOT EXISTS compras (
+        id UUID PRIMARY KEY,
+        cpf_usuario text,
+        produtos list<frozen<map<text, text>>>,
+        endereco_entrega text
+    )
+    """)
     
 
 def create_usuario(session):

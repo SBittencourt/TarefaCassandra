@@ -92,32 +92,35 @@ def main_menu():
                 crud_vendedor.delete_vendedor(session, cpfVendedor)
 
         elif key == '3':  
-            print("Menu do Produto")
+            print("\nMenu do Produto")
             print("1 - Criar Produto")
             print("2 - Ler Produto")
             print("3 - Atualizar Produto")
             print("4 - Deletar Produto")
-            sub = input("Digite a opção desejada? (V para voltar) ")
+            print("5 - Voltar")
+            sub = input("Digite a opção desejada (V para voltar): ")
 
-                    
             if sub == "1":
                 crud_produto.create_produto(session)
 
             elif sub == "2":
-                crud_produto.read_produto(session)
+                cpfVendedor = input("Ler produtos, deseja algum vendedor especifico? digite o cpf, pressione 'enter' para ver todos ")
+                crud_produto.read_produto(session, cpfVendedor if cpfVendedor else None)
 
             elif sub == "3":
-                nomeProduto = input("Digite o nome do produto a ser atualizado: ")
-                crud_produto.update_produto(session, nomeProduto)
+                produto_id = input("Digite o ID do produto a ser atualizado: ")
+                crud_produto.update_produto(session, produto_id)
 
             elif sub == "4":
-                nomeProduto = input("Digite o nome do produto a ser deletado: ")
-                crud_produto.delete_produto(session, nomeProduto)
+                produto_id = input("Digite o ID do produto a ser deletado: ")
+                crud_produto.delete_produto(session, produto_id)
                 
-            elif sub == "5":
+            elif sub == "5" or sub.upper() == "V":
                 break
             else:
                 print("Opção inválida. Tente novamente.")
+
+
 
         elif key == '4':  
             print("\nMenu de Compras")
