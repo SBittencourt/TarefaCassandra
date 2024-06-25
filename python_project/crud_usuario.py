@@ -19,7 +19,7 @@ def create_tables(session):
     )
     """)
 
-    # Defina outras tabelas aqui (vendedor, produto, favoritos, compras)
+    
 
 def create_usuario(session):
     print("\nInserindo um novo usuário")

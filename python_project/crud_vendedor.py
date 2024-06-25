@@ -24,25 +24,22 @@ def create_vendedor(session):
     telefone = input("Telefone: ")
     email = input("Email: ")
 
-    enderecos = []
-    key = 'S'
-    while key.upper() == 'S':
-        rua = input("Rua: ")
-        num = input("Número: ")
-        bairro = input("Bairro: ")
-        cidade = input("Cidade: ")
-        estado = input("Estado: ")
-        cep = input("CEP: ")
-        endereco = {
-            "rua": rua,
-            "num": num,
-            "bairro": bairro,
-            "cidade": cidade,
-            "estado": estado,
-            "cep": cep
-        }
-        enderecos.append(endereco)
-        key = input("Deseja adicionar outro endereço (S/N)? ")
+    rua = input("Rua: ")
+    num = input("Número: ")
+    bairro = input("Bairro: ")
+    cidade = input("Cidade: ")
+    estado = input("Estado: ")
+    cep = input("CEP: ")
+
+    endereco = {
+        "rua": rua,
+        "num": num,
+        "bairro": bairro,
+        "cidade": cidade,
+        "estado": estado,
+        "cep": cep
+    }
+    enderecos = [endereco]
 
     query = SimpleStatement("""
     INSERT INTO vendedor (nome, cpf, telefone, email, enderecos) 
