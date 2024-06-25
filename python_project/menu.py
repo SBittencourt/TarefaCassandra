@@ -53,8 +53,8 @@ def main_menu():
                 crud_usuario.create_usuario(session)
 
             elif sub == '2':
-                nomeUsuario = input("Visualizar usuário, deseja algum nome específico? ")
-                crud_usuario.read_usuario(session, nomeUsuario)
+                cpfUsuario = input("Visualizar usuário, deseja algum cpf específico? Pressione 'enter' para ver todos ")
+                crud_usuario.read_usuario(session, cpfUsuario)
 
             elif sub == '3':
                 cpfUsuario = input("Atualizar usuário, digite o CPF do usuário: ")

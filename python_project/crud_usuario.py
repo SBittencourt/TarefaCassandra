@@ -53,40 +53,118 @@ def create_usuario(session):
     session.execute(query, (nome, sobrenome, cpf, telefone, email, end, []))
     print(f"Usuário {nome} {sobrenome} inserido com sucesso")
 
-def read_usuario(session, nomeUsuario):
-    query = SimpleStatement("SELECT * FROM usuario WHERE nome=%s ALLOW FILTERING", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
-    mydoc = session.execute(query, (nomeUsuario,)).one()
+def read_usuario(session, cpfUsuario=None):
+    if cpfUsuario:
+        query = SimpleStatement("SELECT * FROM usuario WHERE cpf=%s", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
+        users = session.execute(query, (cpfUsuario,))
+        if users.one():
+            users = session.execute(query, (cpfUsuario,))
+        else:
+            print(f"Usuário com CPF '{cpfUsuario}' não encontrado.")
+            return
+    else:
+        query = SimpleStatement("SELECT * FROM usuario", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
+        users = session.execute(query)
 
-    if mydoc:
-        print(f"Nome: {mydoc.nome}")
-        print(f"Sobrenome: {mydoc.sobrenome}")
-        print(f"Telefone: {mydoc.telefone}")
-        print(f"Email: {mydoc.email}")
+    for user in users:
+        print(f"Nome: {user.nome}")
+        print(f"Sobrenome: {user.sobrenome}")
+        print(f"Telefone: {user.telefone}")
+        print(f"Email: {user.email}")
+        print(f"CPF: {user.cpf}")
         print("Endereço:")
-        for endereco in mydoc.end:
+        for endereco in user.end:
             print(f"  Rua: {endereco['rua']}")
             print(f"  Número: {endereco['num']}")
             print(f"  Bairro: {endereco['bairro']}")
             print(f"  Cidade: {endereco['cidade']}")
             print(f"  Estado: {endereco['estado']}")
             print(f"  CEP: {endereco['cep']}")
-    else:
-        print(f"Usuário com nome '{nomeUsuario}' não encontrado.")
+        print("----")
 
-def update_usuario(session, cpf_usuario, update_fields):
+
+def update_usuario(session, cpf_usuario):
     query = SimpleStatement("SELECT * FROM usuario WHERE cpf=%s", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
     mydoc = session.execute(query, (cpf_usuario,)).one()
 
     if mydoc:
+        update_fields = {}  
+
         print("Dados do usuário antes da atualização:")
         print_user_info(session, mydoc)
 
-        # Lógica de atualização aqui
+        print("\nMenu de opções:")
+        print("1 - Mudar Nome")
+        print("2 - Mudar Sobrenome")
+        print("3 - Mudar Telefone")
+        print("4 - Mudar Email")
+        print("5 - Mudar Endereço")
+        print("6 - Voltar ao menu principal")
 
+        while True:
+            opcao = input("\nEscolha uma opção: ")
+
+            if opcao == "1":
+                nome = input("Novo Nome: ")
+                if nome:
+                    update_fields["nome"] = nome
+            elif opcao == "2":
+                sobrenome = input("Novo Sobrenome: ")
+                if sobrenome:
+                    update_fields["sobrenome"] = sobrenome
+            elif opcao == "3":
+                telefone = input("Novo Telefone: ")
+                if telefone:
+                    update_fields["telefone"] = telefone
+            elif opcao == "4":
+                email = input("Novo Email: ")
+                if email:
+                    update_fields["email"] = email
+            elif opcao == "5":
+                print("\nEndereço atual:")
+                for endereco in mydoc.end:
+                    print("Rua:", endereco["rua"])
+                    print("Número:", endereco["num"])
+                    print("Bairro:", endereco["bairro"])
+                    print("Cidade:", endereco["cidade"])
+                    print("Estado:", endereco["estado"])
+                    print("CEP:", endereco["cep"])
+                rua = input("\nNova Rua: ")
+                num = input("Novo Número: ")
+                bairro = input("Novo Bairro: ")
+                cidade = input("Nova Cidade: ")
+                estado = input("Novo Estado: ")
+                cep = input("Novo CEP: ")
+                endereco = {
+                    "rua": rua,
+                    "num": num,
+                    "bairro": bairro,
+                    "cidade": cidade,
+                    "estado": estado,
+                    "cep": cep
+                }
+                update_fields["end"] = [endereco]
+            elif opcao == "6":
+                print("Retornando ao menu principal...")
+                break
+            else:
+                print("Opção inválida. Por favor, escolha uma opção válida.")
+
+        update_query = "UPDATE usuario SET nome=%s, sobrenome=%s, telefone=%s, email=%s, end=%s WHERE cpf=%s"
+        session.execute(update_query, (
+            update_fields.get("nome", mydoc.nome),
+            update_fields.get("sobrenome", mydoc.sobrenome),
+            update_fields.get("telefone", mydoc.telefone),
+            update_fields.get("email", mydoc.email),
+            update_fields.get("end", mydoc.end),
+            cpf_usuario
+        ))
         print("Usuário atualizado com sucesso.")
 
     else:
         print(f"Usuário com CPF '{cpf_usuario}' não encontrado.")
+
+
 
 def visualizar_favoritos(session, cpf_usuario):
     query = SimpleStatement("""
