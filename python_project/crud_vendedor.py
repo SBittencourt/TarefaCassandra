@@ -51,27 +51,27 @@ def create_vendedor(session):
     session.execute(query, (nome, cpf, telefone, email, enderecos))
     print(f"Vendedor {nome} inserido com sucesso")
 
-def read_vendedor(session, nome_vendedor=None):
+def read_vendedor(session, cpf_vendedor=None):
     print("Informações do vendedor:")
 
-    if nome_vendedor is None:
-        query = SimpleStatement("SELECT * FROM vendedor")
+    if cpf_vendedor:
+        query = SimpleStatement("SELECT * FROM vendedor WHERE cpf=%s", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
+        vendedores = session.execute(query, (cpf_vendedor,))
+        vendedor = vendedores.one()
+        if vendedor:
+            print_vendedor_info(vendedor) 
+        else:
+            print(f"Vendedor com CPF '{cpf_vendedor}' não encontrado.")
+    else:
+        query = SimpleStatement("SELECT * FROM vendedor", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
         vendedores = session.execute(query)
         for vendedor in vendedores:
-            print_vendedor_info(session, vendedor)
-    else:
-        query = SimpleStatement("SELECT * FROM vendedor WHERE nome=%s ALLOW FILTERING", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
-        vendedores = session.execute(query, (nome_vendedor,))
-        found = False
-        for vendedor in vendedores:
-            found = True
-            print_vendedor_info(session, vendedor)
-        
-        if not found:
-            print(f"Vendedor com cpf '{nome_vendedor}' não encontrado.")
+            print_vendedor_info(vendedor)  
+  
 
 
-def print_vendedor_info(session, vendedor):
+
+def print_vendedor_info(vendedor):
     print("Nome:", vendedor.nome)
     print("CPF:", vendedor.cpf)
     print("Telefone:", vendedor.telefone)
@@ -86,13 +86,14 @@ def print_vendedor_info(session, vendedor):
         print("CEP:", endereco["cep"])
     print("----")
 
+
 def update_vendedor(session, cpf_vendedor, update_fields):
     query = SimpleStatement("SELECT * FROM vendedor WHERE cpf=%s", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
     vendedor = session.execute(query, (cpf_vendedor,)).one()
 
     if vendedor:
         print("Dados do vendedor antes da atualização:")
-        print_vendedor_info(session, vendedor)
+        print_vendedor_info(vendedor) 
 
         print("\nMenu de opções:")
         print("1 - Mudar Nome")
@@ -146,7 +147,6 @@ def update_vendedor(session, cpf_vendedor, update_fields):
             else:
                 print("Opção inválida. Por favor, escolha uma opção válida.")
 
-        # Preparando a atualização
         update_query = "UPDATE vendedor SET nome=%s, telefone=%s, email=%s, enderecos=%s WHERE cpf=%s"
         session.execute(update_query, (
             update_fields.get("nome", vendedor.nome),
@@ -159,4 +159,5 @@ def update_vendedor(session, cpf_vendedor, update_fields):
 
     else:
         print(f"Vendedor com CPF '{cpf_vendedor}' não encontrado.")
+
 

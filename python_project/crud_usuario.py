@@ -57,30 +57,16 @@ def read_usuario(session, cpfUsuario=None):
     if cpfUsuario:
         query = SimpleStatement("SELECT * FROM usuario WHERE cpf=%s", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
         users = session.execute(query, (cpfUsuario,))
-        if users.one():
-            users = session.execute(query, (cpfUsuario,))
+        user = users.one()
+        if user:
+            print_user_info(session, user)
         else:
             print(f"Usuário com CPF '{cpfUsuario}' não encontrado.")
-            return
     else:
         query = SimpleStatement("SELECT * FROM usuario", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
         users = session.execute(query)
-
-    for user in users:
-        print(f"Nome: {user.nome}")
-        print(f"Sobrenome: {user.sobrenome}")
-        print(f"Telefone: {user.telefone}")
-        print(f"Email: {user.email}")
-        print(f"CPF: {user.cpf}")
-        print("Endereço:")
-        for endereco in user.end:
-            print(f"  Rua: {endereco['rua']}")
-            print(f"  Número: {endereco['num']}")
-            print(f"  Bairro: {endereco['bairro']}")
-            print(f"  Cidade: {endereco['cidade']}")
-            print(f"  Estado: {endereco['estado']}")
-            print(f"  CEP: {endereco['cep']}")
-        print("----")
+        for user in users:
+            print_user_info(session, user)
 
 
 def update_usuario(session, cpf_usuario):

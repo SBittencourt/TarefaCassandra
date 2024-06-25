@@ -78,8 +78,8 @@ def main_menu():
                 crud_vendedor.create_vendedor(session)
 
             elif sub == '2':
-                nomeVendedor = input("Ler vendedor, deseja algum nome específico? ")
-                crud_vendedor.read_vendedor(session, nomeVendedor)
+                cpfVendedor = input("Ler vendedor, deseja algum cpf específico? Pressione 'enter' para ver todos ")
+                crud_vendedor.read_vendedor(session, cpfVendedor)
 
             elif sub == '3':
                 cpfVendedor = input("Atualizar vendedor, digite o CPF do vendedor: ")
