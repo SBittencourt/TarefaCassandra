@@ -6,7 +6,6 @@ import crud_usuario
 import crud_vendedor
 import crud_produto
 import crud_compras
-import crud_favoritos
 
 def create_session():
     cloud_config = {
@@ -124,8 +123,7 @@ def main_menu():
             print("\nMenu de Compras")
             print("1 - Realizar Compras")
             print("2 - Listar Compras")
-            print("3 - Detalhar Compra")
-            print("4 - Voltar ao Menu Principal")
+            print("3 - Deletar compra")
             sub = input("Digite a opção desejada: ")
 
             if sub == '1':
@@ -144,9 +142,9 @@ def main_menu():
 
 
             elif sub == '3':
-                print("Detalhar Compra")
-                compra_id = input("Digite o ID da compra para detalhar: ")
-                crud_compras.detalhar_compra(session, compra_id)
+                print("Deletar Compra")
+                compra_id = input("Digite o ID da compra que deseja deletar: ")
+                crud_compras.deletar_compra(session, compra_id)
 
             elif sub.upper() == 'V':
                 print("Voltando ao Menu Principal...")

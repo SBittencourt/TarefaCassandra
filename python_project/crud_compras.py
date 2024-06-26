@@ -120,3 +120,19 @@ def ver_compras_realizadas(session, cpf_usuario):
     except InvalidRequest as e:
         print(f"Erro ao visualizar compras realizadas: {e}")
 
+
+
+def deletar_compra(session, compra_id):
+    try:
+
+        if not isinstance(compra_id, uuid.UUID):
+            compra_id = uuid.UUID(compra_id)
+
+        query_deletar = SimpleStatement("DELETE FROM compras WHERE id=%s", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
+        
+        session.execute(query_deletar, (compra_id,))
+
+        print(f"Compra com ID {compra_id} deletada com sucesso.")
+
+    except InvalidRequest as e:
+        print(f"Erro ao deletar compra: {e}")
