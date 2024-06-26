@@ -14,8 +14,7 @@ def create_tables(session):
         cpf text PRIMARY KEY,
         telefone text,
         email text,
-        end list<frozen<map<text, text>>>,
-        favorito list<text>
+        end list<frozen<map<text, text>>>
     )
     """)
 
@@ -24,17 +23,8 @@ def create_tables(session):
         id UUID PRIMARY KEY,
         nome text,
         preco float,
-        marca text
+        marca text,
         vendedor text
-    )
-    """)
-
-
-    session.execute("""
-    CREATE TABLE IF NOT EXISTS favoritos (
-        id UUID PRIMARY KEY,
-        cpf_usuario text,
-        id_produto UUID
     )
     """)
 
@@ -46,7 +36,6 @@ def create_tables(session):
         endereco_entrega text
     )
     """)
-    
 
 def create_usuario(session):
     print("\nInserindo um novo usuário")
@@ -74,10 +63,10 @@ def create_usuario(session):
     }]
 
     query = SimpleStatement("""
-    INSERT INTO usuario (nome, sobrenome, cpf, telefone, email, end, favorito) 
-    VALUES (%s, %s, %s, %s, %s, %s, %s)
+    INSERT INTO usuario (nome, sobrenome, cpf, telefone, email, end) 
+    VALUES (%s, %s, %s, %s, %s, %s)
     """)
-    session.execute(query, (nome, sobrenome, cpf, telefone, email, end, []))
+    session.execute(query, (nome, sobrenome, cpf, telefone, email, end))
     print(f"Usuário {nome} {sobrenome} inserido com sucesso")
 
 def read_usuario(session, cpfUsuario=None):
@@ -86,14 +75,14 @@ def read_usuario(session, cpfUsuario=None):
         users = session.execute(query, (cpfUsuario,))
         user = users.one()
         if user:
-            print_user_info(session, user)
+            print_user_info(session, user)  
         else:
             print(f"Usuário com CPF '{cpfUsuario}' não encontrado.")
     else:
         query = SimpleStatement("SELECT * FROM usuario", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
         users = session.execute(query)
         for user in users:
-            print_user_info(session, user)
+            print_user_info(session, user)  
 
 
 def update_usuario(session, cpf_usuario):
@@ -104,7 +93,7 @@ def update_usuario(session, cpf_usuario):
         update_fields = {}  
 
         print("Dados do usuário antes da atualização:")
-        print_user_info(session, mydoc)
+        print_user_info(session, mydoc)  # Certifique-se de passar session e mydoc
 
         print("\nMenu de opções:")
         print("1 - Mudar Nome")
@@ -178,26 +167,6 @@ def update_usuario(session, cpf_usuario):
         print(f"Usuário com CPF '{cpf_usuario}' não encontrado.")
 
 
-
-def visualizar_favoritos(session, cpf_usuario):
-    query = SimpleStatement("""
-    SELECT * FROM favoritos WHERE cpf_usuario=%s ALLOW FILTERING
-    """)
-    mydoc = session.execute(query, (cpf_usuario,))
-    for favorito in mydoc:
-        produto = session.execute("SELECT * FROM produto WHERE id=%s", (favorito["id_produto"],)).one()
-        if produto:
-            vendedor = session.execute("SELECT * FROM vendedor WHERE cpf=%s", (produto["vendedor"],)).one()
-            if vendedor:
-                print("Nome do Produto:", produto["nome"])
-                print("Preço:", produto["preco"])
-                print("Vendedor:", vendedor["nome"])
-                print()
-            else:
-                print("Vendedor não encontrado para o produto:", produto["nome"])
-        else:
-            print("Produto não encontrado para o favorito com ID:", favorito["id"])
-
 def ver_compras_realizadas(session, cpf_usuario):
     query = SimpleStatement("""
     SELECT * FROM compras WHERE cpf_usuario=%s ALLOW FILTERING
@@ -217,8 +186,6 @@ def ver_compras_realizadas(session, cpf_usuario):
     if count == 0:
         print("Nenhuma compra encontrada para este usuário.")
 
-
-
 def print_user_info(session, user):
     print("Nome:", user.nome)
     print("Sobrenome:", user.sobrenome)
@@ -233,12 +200,9 @@ def print_user_info(session, user):
         print("Cidade:", endereco["cidade"])
         print("Estado:", endereco["estado"])
         print("CEP:", endereco["cep"])
-    print("Favoritos:")
-    visualizar_favoritos(session, user.cpf)
     print("Compras Realizadas:")
     ver_compras_realizadas(session, user.cpf)
     print("----")
-
 
 def test_crud_operations():
     from connect_database import create_session
@@ -252,17 +216,13 @@ def test_crud_operations():
 
     # Teste de leitura de usuário
     print("\nTeste de leitura de usuário:")
-    nomeUsuario = input("Digite o nome do usuário para buscar: ")
-    read_usuario(session, nomeUsuario)
+    cpfUsuario = input("Digite o CPF do usuário para buscar: ")
+    read_usuario(session, cpfUsuario)
 
     # Teste de atualização de usuário
     print("\nTeste de atualização de usuário:")
     cpf_usuario = input("Digite o CPF do usuário para atualizar: ")
-    update_fields = {
-        "telefone": "987654321",
-        "email": "john.doe@newdomain.com"
-    }
-    update_usuario(session, cpf_usuario, update_fields)
+    update_usuario(session, cpf_usuario)
 
     # Teste de exclusão de usuário
     print("\nTeste de exclusão de usuário:")
