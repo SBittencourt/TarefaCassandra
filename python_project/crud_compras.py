@@ -8,7 +8,6 @@ def realizar_compra(session, cpf_usuario):
     carrinho = []
 
     try:
-        # 1. Buscar produtos disponíveis
         print("Lista de produtos disponíveis:")
         query_produto = SimpleStatement("SELECT id, nome, preco, vendedor FROM produto", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
         produtos = list(session.execute(query_produto))
@@ -20,45 +19,6 @@ def realizar_compra(session, cpf_usuario):
             else:
                 print(f"{i} - ID: {produto.id} | Produto: {produto.nome} | Vendedor: Não disponível | Preço: {produto.preco}")
 
-        # 2. Buscar endereços do usuário
-        query_enderecos = SimpleStatement("SELECT end FROM usuario WHERE cpf=%s", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
-        usuario = session.execute(query_enderecos, (cpf_usuario,)).one()
-
-        if not usuario or 'end' not in usuario:
-            print("Usuário não possui endereços cadastrados. Não é possível continuar com a compra.")
-            return
-
-        enderecos = usuario['end']
-
-        # Se houver apenas um endereço, seleciona automaticamente
-        if len(enderecos) == 1:
-            endereco_entrega = enderecos[0]
-            print("\nEndereço selecionado para entrega:")
-            print(f"{endereco_entrega['rua']}, {endereco_entrega['num']}, {endereco_entrega['bairro']}, {endereco_entrega['cidade']}, {endereco_entrega['estado']}, CEP: {endereco_entrega['cep']}")
-        else:
-            print("\nEndereços de entrega disponíveis:")
-            for i, endereco in enumerate(enderecos, start=1):
-                print(f"{i} - {endereco['rua']}, {endereco['num']}, {endereco['bairro']}, {endereco['cidade']}, {endereco['estado']}, CEP: {endereco['cep']}")
-
-            while True:
-                endereco_selecionado = input("Digite o número do endereço de entrega selecionado (ou 'C' para cancelar): ")
-                if endereco_selecionado.upper() == 'C':
-                    print("Operação cancelada.")
-                    return
-
-                try:
-                    endereco_selecionado = int(endereco_selecionado)
-                    if 1 <= endereco_selecionado <= len(enderecos):
-                        endereco_entrega = enderecos[endereco_selecionado - 1]
-                        print("\nEndereço selecionado para entrega:")
-                        print(f"{endereco_entrega['rua']}, {endereco_entrega['num']}, {endereco_entrega['bairro']}, {endereco_entrega['cidade']}, {endereco_entrega['estado']}, CEP: {endereco_entrega['cep']}")
-                        break
-                    else:
-                        print("Número de endereço inválido.")
-                except ValueError:
-                    print("Entrada inválida. Digite um número válido.")
-
-        # 3. Selecionar produtos para o carrinho
         while True:
             produto_id = input("\nDigite o ID do produto que deseja adicionar ao carrinho (ou 'F' para finalizar): ")
             if produto_id.upper() == 'F':
@@ -69,7 +29,6 @@ def realizar_compra(session, cpf_usuario):
                 if 1 <= produto_id <= len(produtos):
                     produto_selecionado = produtos[produto_id - 1]
                     carrinho.append({
-                        "id": produto_selecionado.id,
                         "nome": produto_selecionado.nome,
                         "preco": produto_selecionado.preco
                     })
@@ -79,7 +38,28 @@ def realizar_compra(session, cpf_usuario):
             except ValueError:
                 print("Entrada inválida. Digite um número válido.")
 
-        # 4. Confirmar a compra
+        query_endereco = SimpleStatement("SELECT end FROM usuario WHERE cpf=%s", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
+        usuario = session.execute(query_endereco, (cpf_usuario,)).one()
+
+        if not usuario or 'end' not in usuario or not usuario['end']:
+            print("Usuário não possui endereço cadastrado. Vamos solicitar o endereço para continuar com a compra.")
+
+
+            endereco_entrega = {}
+            endereco_entrega['rua'] = input("Digite a rua: ")
+            endereco_entrega['num'] = input("Digite o número: ")
+            endereco_entrega['bairro'] = input("Digite o bairro: ")
+            endereco_entrega['cidade'] = input("Digite a cidade: ")
+            endereco_entrega['estado'] = input("Digite o estado: ")
+            endereco_entrega['cep'] = input("Digite o CEP: ")
+
+        else:
+            endereco_entrega = usuario['end'][0]  
+
+        print("\nEndereço selecionado para entrega:")
+        print(f"{endereco_entrega['rua']}, {endereco_entrega['num']}, {endereco_entrega['bairro']}, {endereco_entrega['cidade']}, {endereco_entrega['estado']}, CEP: {endereco_entrega['cep']}")
+
+
         if not carrinho:
             print("Carrinho vazio. Operação cancelada.")
             return
@@ -92,14 +72,14 @@ def realizar_compra(session, cpf_usuario):
             print("Compra cancelada.")
             return
 
-        # 5. Inserir a compra no banco de dados
+
         batch = BatchStatement(consistency_level=ConsistencyLevel.LOCAL_QUORUM)
 
         compra_id = uuid.uuid4()
         for produto in carrinho:
             batch.add(
                 "INSERT INTO compras (id, cpf_usuario, produtos, endereco_entrega, valor_total) VALUES (%s, %s, %s, %s, %s)",
-                (compra_id, cpf_usuario, produto['nome'], f"{endereco_entrega['rua']}, {endereco_entrega['num']}, {endereco_entrega['bairro']}, {endereco_entrega['cidade']}, {endereco_entrega['estado']}, CEP: {endereco_entrega['cep']}", total)
+                (compra_id, cpf_usuario, [{"nome": produto['nome'], "preco": str(produto['preco'])}], f"{endereco_entrega['rua']}, {endereco_entrega['num']}, {endereco_entrega['bairro']}, {endereco_entrega['cidade']}, {endereco_entrega['estado']}, CEP: {endereco_entrega['cep']}", total)
             )
 
         session.execute(batch)
@@ -111,14 +91,19 @@ def realizar_compra(session, cpf_usuario):
 
 def ver_compras_realizadas(session, cpf_usuario):
     try:
-        query_compras = SimpleStatement("SELECT * FROM compras WHERE cpf_usuario=%s ALLOW FILTERING", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
-        compras_realizadas = session.execute(query_compras, (cpf_usuario,))
-        
+        if cpf_usuario:
+            query_compras = SimpleStatement("SELECT * FROM compras WHERE cpf_usuario=%s ALLOW FILTERING", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
+            compras_realizadas = session.execute(query_compras, (cpf_usuario,))
+        else:
+            query_compras = SimpleStatement("SELECT * FROM compras ALLOW FILTERING", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
+            compras_realizadas = session.execute(query_compras)
+
         count = 0
 
         for compra in compras_realizadas:
             count += 1
             print(f"ID da Compra: {compra.id}")
+            print(f"CPF do Usuário: {compra.cpf_usuario}") 
             print("Produtos:")
             for produto in compra.produtos:
                 print(f"   Nome do Produto: {produto['nome']} | Preço: {produto['preco']}")
@@ -127,7 +112,11 @@ def ver_compras_realizadas(session, cpf_usuario):
             print("----")
         
         if count == 0:
-            print("Nenhuma compra encontrada para este usuário.")
+            if cpf_usuario:
+                print("Nenhuma compra encontrada para este usuário.")
+            else:
+                print("Nenhuma compra encontrada.")
     
     except InvalidRequest as e:
         print(f"Erro ao visualizar compras realizadas: {e}")
+

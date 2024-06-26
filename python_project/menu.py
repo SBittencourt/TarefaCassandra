@@ -37,7 +37,6 @@ def main_menu():
         print("2 - CRUD Vendedor")
         print("3 - CRUD Produto")
         print("4 - Compras")
-        print("5 - Favoritos")
         key = input("Digite a opção desejada? (S para sair) ")
 
         if key == '1':  
@@ -97,7 +96,6 @@ def main_menu():
             print("2 - Ler Produto")
             print("3 - Atualizar Produto")
             print("4 - Deletar Produto")
-            print("5 - Voltar")
             sub = input("Digite a opção desejada (V para voltar): ")
 
             if sub == "1":
@@ -137,8 +135,13 @@ def main_menu():
 
             elif sub == '2':
                 print("Listar Compras")
-                cpf_usuario = input("Digite o CPF do usuário para listar suas compras: ")
-                crud_compras.ver_compras_realizadas(session, cpf_usuario)
+                cpf_usuario = input("Digite o CPF do usuário para listar suas compras (ou pressione Enter para listar todas as compras): ").strip()
+                
+                if cpf_usuario:
+                    crud_compras.ver_compras_realizadas(session, cpf_usuario)
+                else:
+                    crud_compras.ver_compras_realizadas(session, "")
+
 
             elif sub == '3':
                 print("Detalhar Compra")
@@ -152,24 +155,6 @@ def main_menu():
             else:
                 print("Opção inválida. Digite uma opção válida.")
 
-        elif key == '5':  
-            print("Menu de Favoritos")
-            print("1 - Adicionar Favoritos")
-            print("2 - Listar Favoritos")
-            print("3 - Remover Favoritos")
-            sub = input("Digite a opção desejada? (V para voltar) ")
-
-            if sub == '1':
-                print("Adicionar Favoritos")
-                crud_favoritos.add_favorito(session)
-
-            elif sub == '2':
-                cpfUsuario = input("Listar favoritos, digite o CPF do usuário: ")
-                crud_favoritos.list_favoritos(session, cpfUsuario)
-
-            elif sub == '3':
-                favorito_id = input("Remover favorito, digite o ID do favorito: ")
-                crud_favoritos.remove_favorito(session, favorito_id)
         
 if __name__ == "__main__":
     main_menu()

@@ -1,5 +1,8 @@
 from cassandra.cluster import Cluster, ConsistencyLevel
 from cassandra.query import SimpleStatement
+from cassandra import InvalidRequest
+from cassandra.query import BatchStatement
+import uuid
 
 def delete_usuario(session, cpf_usuario):
     query = SimpleStatement("DELETE FROM usuario WHERE cpf=%s", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
@@ -93,7 +96,7 @@ def update_usuario(session, cpf_usuario):
         update_fields = {}  
 
         print("Dados do usuário antes da atualização:")
-        print_user_info(session, mydoc)  # Certifique-se de passar session e mydoc
+        print_user_info(session, mydoc)  
 
         print("\nMenu de opções:")
         print("1 - Mudar Nome")
@@ -166,25 +169,29 @@ def update_usuario(session, cpf_usuario):
     else:
         print(f"Usuário com CPF '{cpf_usuario}' não encontrado.")
 
-
 def ver_compras_realizadas(session, cpf_usuario):
-    query = SimpleStatement("""
-    SELECT * FROM compras WHERE cpf_usuario=%s ALLOW FILTERING
-    """)
-    compras_realizadas = session.execute(query, (cpf_usuario,))
-    count = 0
+    try:
+        query_compras = SimpleStatement("SELECT * FROM compras WHERE cpf_usuario=%s ALLOW FILTERING", consistency_level=ConsistencyLevel.LOCAL_QUORUM)
+        compras_realizadas = session.execute(query_compras, (cpf_usuario,))
+        
+        count = 0
 
-    for compra in compras_realizadas:
-        count += 1
-        print(f"ID da Compra: {compra['id']}")
-        print("Produtos:")
-        for produto in compra['produtos']:
-            print(f"   Nome do Produto: {produto['nome']} | Preço: {produto['preco']}")
-        print(f"Endereço de Entrega: {compra['endereco_entrega']}")
-        print("----")
+        for compra in compras_realizadas:
+            count += 1
+            print(f"ID da Compra: {compra.id}")
+            print("Produtos:")
+            for produto in compra.produtos:
+                print(f"   Nome do Produto: {produto['nome']} | Preço: {produto['preco']}")
+            print(f"Endereço de Entrega: {compra.endereco_entrega}")  
+            print(f"Valor Total: R${compra.valor_total:.2f}")
+            print("----")
+        
+        if count == 0:
+            print("Nenhuma compra encontrada para este usuário.")
+    
+    except InvalidRequest as e:
+        print(f"Erro ao visualizar compras realizadas: {e}")
 
-    if count == 0:
-        print("Nenhuma compra encontrada para este usuário.")
 
 def print_user_info(session, user):
     print("Nome:", user.nome)
